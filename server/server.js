@@ -3,11 +3,16 @@ var bodyParser = require('body-parser');
 const { ObjectID } = require('mongodb');
 
 var { mongoose } = require('./db/mongoose');
+require('dotenv').config({path: './../variables.env'});
+
 var { Todo } = require('./models/todo');
 var { User } = require('./models/user');
 
 // App routes
 var app = express();
+// Set port
+const port = process.env.PORT || 3000;
+
 app.use(bodyParser.json());
 
 // POST
@@ -63,8 +68,8 @@ app.get('/todos/:id', (req, res) => {
 
 });
 
-app.listen(3000, () => {
-  console.log('Server started at port 3000');
+app.listen(port, () => {
+  console.log(`Server started at port ${port}`);
 });
 
 module.exports = {app};

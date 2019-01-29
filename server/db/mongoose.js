@@ -1,8 +1,10 @@
 var mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 
+require('dotenv').config({path: './../../variables.env'});
+
 mongoose.connect(
-  'mongodb://localhost:27017/TodoApp',
+  process.env.MONGO_URI || 'mongodb://localhost:27017/TodoApp',
   { useNewUrlParser: true }
 );
 
