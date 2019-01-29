@@ -3,7 +3,6 @@ var bodyParser = require('body-parser');
 const { ObjectID } = require('mongodb');
 
 var { mongoose } = require('./db/mongoose');
-require('dotenv').config({path: './../variables.env'});
 
 var { Todo } = require('./models/todo');
 var { User } = require('./models/user');
