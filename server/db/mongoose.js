@@ -3,10 +3,10 @@ const path = require('path');
 
 mongoose.Promise = global.Promise;
 
-require('dotenv').config({path: './../../variables.env'});
+const MONGODB_URI = 'mongodb://pixelbender:PixelBender1@ds141720.mlab.com:41720/todoappnode';
 
 mongoose.connect(
-  process.env.MONGODB_URI || 'mongodb://localhost:27017/TodoApp',
+  MONGODB_URI || 'mongodb://localhost:27017/TodoApp',
   { useNewUrlParser: true }
 );
 
