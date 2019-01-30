@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 const jwt = require('jsonwebtoken');
+const _ = require('lodash');
 const Schema = mongoose.Schema;
 // Schema way
 const userSchema = new Schema({
@@ -43,6 +44,14 @@ const userSchema = new Schema({
   });
 
   // instance method - using function because we want to use this
+  userSchema.methods.toJSON = function() {
+    var user = this;
+    var userObject = user.toObject();
+
+    return _.pick(userObject, ['_id', 'email']);
+  };
+
+
   userSchema.methods.generateAuthtoken = function() {
     var user = this;
     var access = 'auth';
@@ -53,7 +62,7 @@ const userSchema = new Schema({
     return user.save().then(() => {
       return token;
     });
-    
+
   };
 
 
