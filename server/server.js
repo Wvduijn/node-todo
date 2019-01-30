@@ -32,69 +32,75 @@ app.post('/todos', (req, res) => {
 
 // GET
 app.get('/todos', (req, res) => {
-    Todo.find().then((todos) => {
-        res.send({todos});
-    }, (e) => {
-        res.status(400).send(e);
-    });
+  Todo.find().then(
+    todos => {
+      res.send({ todos });
+    },
+    e => {
+      res.status(400).send(e);
+    }
+  );
 });
 
 // GET /todos/:id - Individual Todo by :id
 app.get('/todos/:id', (req, res) => {
-    var id = req.params.id;
+  var id = req.params.id;
 
-    // validate id with is Valid
-    if (!ObjectID.isValid(id)) {
-         // 404 - send back empty body
-        return res.status(404).send();
-        console.log('This ID is not valid');
+  // validate id with is Valid
+  if (!ObjectID.isValid(id)) {
+    // 404 - send back empty body
+    return res.status(404).send();
+    console.log('This ID is not valid');
+  }
+
+  // findbyId
+  Todo.findById(id)
+    .then(todo => {
+      // success
+      // if no todo - send back 404 and empty body
+      if (!todo) {
+        res.status(404).send();
       }
-       
-    // findbyId
-    Todo.findById(id).then((todo) => {
-        // success
-        // if no todo - send back 404 and empty body
-        if(!todo){
-            res.status(404).send();
-        }
-         // if todo - send it back
-        res.send({todo});
-    }).catch((e) => {
-        // error
-        // 400 - and send empt body
-        res.status(400).send(e);
+      // if todo - send it back
+      res.send({ todo });
+    })
+    .catch(e => {
+      // error
+      // 400 - and send empt body
+      res.status(400).send(e);
     });
-
 });
 
 // delete todo
 app.delete('/todos/:id', (req, res) => {
   // get the id
   var id = req.params.id;
-    // validate id with is Valid
-    if (!ObjectID.isValid(id)) {
-         // 404 - send back empty body
-        return res.status(404).send();
-        console.log('This ID is not valid');
-    }
-    // remove todo by id
-    Todo.findByIdAndRemove(id).then((todo) => {
+  // validate id with is Valid
+  if (!ObjectID.isValid(id)) {
+    // 404 - send back empty body
+    return res.status(404).send();
+    console.log('This ID is not valid');
+  }
+  // remove todo by id
+  Todo.findByIdAndRemove(id)
+    .then(todo => {
       // success
       // if no todo - send back 404 and empty body
-      if(!todo){
-          res.status(404).send();
+      if (!todo) {
+        res.status(404).send();
       }
-       // if todo - send it back
-      res.send({todo});
-  }).catch((e) => {
+      // if todo - send it back
+      res.send({ todo });
+    })
+    .catch(e => {
       // error
       // 400 - and send empt body
       res.status(400).send(e);
-  });
-})
+    });
+});
 
 app.listen(port, () => {
   console.log(`Server started at port ${port}`);
 });
 
-module.exports = {app};
+module.exports = { app };
