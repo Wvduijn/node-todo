@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
+const jwt = require('jsonwebtoken');
 const Schema = mongoose.Schema;
 // Schema way
 const userSchema = new Schema({
@@ -40,6 +41,22 @@ const userSchema = new Schema({
       }
     }]
   });
+
+  // instance method - using function because we want to use this
+  userSchema.methods.generateAuthtoken = function() {
+    var user = this;
+    var access = 'auth';
+    var token = jwt.sign({_id: user._id.toHexString(), access}, 'secret').toString();
+
+    user.tokens = user.tokens.concat([{access, token}]);
+
+    return user.save().then(() => {
+      return token;
+    });
+    
+  };
+
+
   var User = mongoose.model('User', userSchema);
 
   module.exports = {User}

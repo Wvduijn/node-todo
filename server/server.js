@@ -140,14 +140,14 @@ app.post('/users', (req, res) => {
   var body = _.pick(req.body, ['email', 'password', 'age', 'name']);
   var user = new User(body);
 
-  user.save().then((user) => {
-    res.send(user);
+  user.save().then(() => {
+    user.generateAuthToken();
+  }).then((token) => {
+    res.header('x-auth', token).send(user);
   }).catch((e) => {
     res.status(400).send(e);
   })
 });
-
-
 
 app.listen(port, () => {
   console.log(`Server started at port ${port}`);
