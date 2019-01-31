@@ -2,70 +2,72 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
-const Schema = mongoose.Schema;
-// Schema way
-const userSchema = new Schema({
-    name: {
+
+var UserSchema = new mongoose.Schema({
+  email: {
+    type: String,
+    required: true,
+    trim: true,
+    minlength: 1,
+    unique: true,
+    validate: {
+      validator: validator.isEmail,
+      message: '{VALUE} is not a valid email'
+    }
+  },
+  password: {
+    type: String,
+    require: true,
+    minlength: 6
+  },
+  tokens: [{
+    access: {
       type: String,
-      required: true,
-      minlength: 1,
-      trim: true
-    },
-    email: {
-      unique: true,
-      type: String,
-      required: true,
-      minlength: 1,
-      trim: true,
-      validate: {
-        validator: validator.isEmail,
-        message: '{VALUE} is not a valid email'
-      }
-    },
-    age: {
-      type: Number,
       required: true
     },
-    password: {
+    token: {
       type: String,
-      require: true,
-      minlength: 6
-    },
-    tokens: [{
-      access: {
-        type: String,
-        required: true
-      },
-      token: {
-        type: String,
-        required: true
-      }
-    }]
+      required: true
+    }
+  }]
+});
+
+UserSchema.methods.toJSON = function () {
+  var user = this;
+  var userObject = user.toObject();
+
+  return _.pick(userObject, ['_id', 'email']);
+};
+
+UserSchema.methods.generateAuthToken = function () {
+  var user = this;
+  var access = 'auth';
+  var token = jwt.sign({_id: user._id.toHexString(), access}, 'abc123').toString();
+
+  user.tokens.push({access, token});
+
+  return user.save().then(() => {
+    return token;
   });
+};
 
-  // instance method - using function because we want to use this
-  userSchema.methods.toJSON = function() {
-    var user = this;
-    var userObject = user.toObject();
+UserSchema.statics.findByToken = function (token) {
+  var User = this;
+  var decoded;
 
-    return _.pick(userObject, ['_id', 'email']);
-  };
+  try {
+    decoded = jwt.verify(token, 'abc123');
+  } catch (e) {
+    return Promise.reject();
+  }
 
+  return User.findOne({
+    '_id': decoded._id,
+    'tokens.token': token,
+    'tokens.access': 'auth'
+  });
+};
 
-  userSchema.methods.generateAuthtoken = function() {
-    var user = this;
-    var access = 'auth';
-    var token = jwt.sign({_id: user._id.toHexString(), access}, 'secret').toString();
+var User = mongoose.model('User', UserSchema);
 
-    user.tokens = user.tokens.concat([{access, token}]);
-
-    return user.save().then(() => {
-      return token;
-    });
-
-  };
-
-
-  var User = mongoose.model('User', userSchema);
-
-  module.exports = {User}
+module.exports = {User}
