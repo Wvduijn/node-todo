@@ -50,7 +50,7 @@ app.get('/todos', authenticate, (req, res) => {
 });
 
 // GET /todos/:id - Individual Todo by :id
-app.get('/todos/:id', (req, res) => {
+app.get('/todos/:id', authenticate, (req, res) => {
   var id = req.params.id;
 
   // validate id with is Valid
@@ -61,7 +61,10 @@ app.get('/todos/:id', (req, res) => {
   }
 
   // findbyId
-  Todo.findById(id)
+  Todo.findOne({
+    _id: id,
+    _creator: req.user._id
+  })
     .then(todo => {
       // success
       // if no todo - send back 404 and empty body
@@ -79,7 +82,7 @@ app.get('/todos/:id', (req, res) => {
 });
 
 // DELETE todo
-app.delete('/todos/:id', (req, res) => {
+app.delete('/todos/:id', authenticate, (req, res) => {
   // get the id
   var id = req.params.id;
   // validate id with is Valid
@@ -89,7 +92,10 @@ app.delete('/todos/:id', (req, res) => {
     console.log('This ID is not valid');
   }
   // remove todo by id
-  Todo.findByIdAndRemove(id)
+  Todo.findOneAndRemove({
+    _id: id,
+    _creator: req.user._id
+  })
     .then(todo => {
       // success
       // if no todo - send back 404 and empty body
@@ -107,7 +113,7 @@ app.delete('/todos/:id', (req, res) => {
 });
 
 // UPDATE ITEM
-app.patch('/todos/:id', (req, res) => {
+app.patch('/todos/:id', authenticate, (req, res) => {
   var id = req.params.id;
   var body = _.pick(req.body, ['text', 'completed']);
 
@@ -126,7 +132,14 @@ app.patch('/todos/:id', (req, res) => {
   }
 
   // query the db
-  Todo.findByIdAndUpdate(id, { $set: body }, { new: true })
+  Todo.findOneAndUpdate(
+    {
+      _id: id,
+      _creator: req.user._id
+    },
+    { $set: body },
+    { new: true }
+  )
     .then(todo => {
       if (!todo) {
         return res.status(404).send();
@@ -165,24 +178,29 @@ app.get('/users/me', authenticate, (req, res) => {
 app.post('/users/login', (req, res) => {
   var body = _.pick(req.body, ['email', 'password']);
 
-  User.findByCredentials(body.email, body.password).then((user) => {
-    // generate Authentication token
-    return user.generateAuthToken().then((token) => {
-      res.header('x-auth', token).send(user);
+  User.findByCredentials(body.email, body.password)
+    .then(user => {
+      // generate Authentication token
+      return user.generateAuthToken().then(token => {
+        res.header('x-auth', token).send(user);
+      });
+    })
+    .catch(e => {
+      return res.status(400).send();
     });
-  }).catch((e) => {
-    return res.status(400).send();
-  })
-})
+});
 
 // LOGOUT THE USER
 app.delete('users/me/token', authenticate, (req, res) => {
-  req.user.removeToken(req.token).then(() => {
-    res.status(200).send();
-  }, () => {
-    res.status(400).send()
-  });
-})
+  req.user.removeToken(req.token).then(
+    () => {
+      res.status(200).send();
+    },
+    () => {
+      res.status(400).send();
+    }
+  );
+});
 
 app.listen(port, () => {
   console.log(`Server started at port ${port}`);
