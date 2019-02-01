@@ -63,15 +63,15 @@ app.get('/todos/:id', (req, res) => {
       // success
       // if no todo - send back 404 and empty body
       if (!todo) {
-        res.status(404).send();
+        return res.status(404).send();
       }
       // if todo - send it back
-      res.send({ todo });
+      return res.send({ todo });
     })
     .catch(e => {
       // error
       // 400 - and send empt body
-      res.status(400).send(e);
+      return res.status(400).send(e);
     });
 });
 
@@ -99,7 +99,7 @@ app.delete('/todos/:id', (req, res) => {
     .catch(e => {
       // error
       // 400 - and send empty body
-      res.status(400).send(e);
+      return res.status(400).send(e);
     });
 });
 
@@ -114,7 +114,7 @@ app.patch('/todos/:id', (req, res) => {
     return res.status(404).send();
     console.log('This ID is not valid');
   }
-
+  // set CompletdAt timstamp
   if (_.isBoolean(body.completed) && body.completed) {
     body.completedAt = new Date().getTime();
   } else {
@@ -131,7 +131,7 @@ app.patch('/todos/:id', (req, res) => {
       res.send({ todo });
     })
     .catch(e => {
-      res.status(400).send();
+      return res.status(400).send();
     });
 });
 
@@ -150,13 +150,27 @@ app.post('/users', (req, res) => {
       res.header('x-auth', token).send(user);
     })
     .catch(e => {
-      res.status(400).send(e);
+      return res.status(400).send(e);
     });
 });
 
 app.get('/users/me', authenticate, (req, res) => {
   res.send(req.user);
 });
+
+// POST /users/login { email, password }
+app.post('/users/login', (req, res) => {
+  var body = _.pick(req.body, ['email', 'password']);
+
+  User.findByCredentials(body.email, body.password).then((user) => {
+    // generate Authentication token
+    return user.generateAuthToken().then((token) => {
+      res.header('x-auth', token).send(user);
+    });
+  }).catch((e) => {
+    return res.status(400).send();
+  })
+})
 
 app.listen(port, () => {
   console.log(`Server started at port ${port}`);
